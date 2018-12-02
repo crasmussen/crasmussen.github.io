@@ -35,7 +35,7 @@
   <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" id="bubbles"></svg>
 
   <div id="diagnostics">
-    <p>Version: 11</p>
+    <p>Version: 12</p>
     <ul id="diagnosticsList"></ul>
   </div>
   <script type="text/javascript">
@@ -112,6 +112,8 @@
         circles.forEach(function (circle) {
 
           if (circle.attributes.reverse.value == "true") {
+            var audio = new Audio('shime.mp3');
+            audio.play();
             circle.setAttribute("lives", circle.attributes.lives.value - 1);
             reverseCircle(circle);
             circle.setAttribute("reverse", "false");
