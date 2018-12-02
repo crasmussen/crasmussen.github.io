@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>title</title>
+  <title>Bubbles</title>
   <style type="text/css">
     html,
     body,
@@ -35,7 +35,7 @@
   <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" id="bubbles"></svg>
 
   <div id="diagnostics">
-    <p>Version: 10</p>
+    <p>Version: 11</p>
     <ul id="diagnosticsList"></ul>
   </div>
   <script type="text/javascript">
@@ -46,7 +46,6 @@
       var circleId = 0;
       var pt = svgBubbles.createSVGPoint();
 
-      // Get point in global SVG space
       function cursorPoint(evt) {
         pt.x = evt.clientX;
         pt.y = evt.clientY;
@@ -66,14 +65,17 @@
         var key = event.which || event.keyCode;
         if (key === 100 || key === 68) {
           setInterval(function () {
+
             while (diagnosticsList.firstChild) {
               diagnosticsList.removeChild(diagnosticsList.firstChild);
             }
 
             circles.forEach(function (circle) {
-              var diagnostics = "id: " + circles.indexOf(circle) + " radius: " + Math.round(circle.attributes
-                  .r.value * 10) / 10 +
-                " direction: " + circle.attributes.direction.value + " lives: " + circle.attributes.lives.value;
+              var diagnostics = 
+              "id: " + circles.indexOf(circle) + 
+              " radius: " + Math.round(circle.attributes.r.value * 10) / 10 +
+              " direction: " + circle.attributes.direction.value + 
+              " lives: " + circle.attributes.lives.value;
 
               var newNumberListItem = document.createElement("li");
               var numberListValue = document.createTextNode(diagnostics);
@@ -81,10 +83,98 @@
               diagnosticsList.appendChild(newNumberListItem);
             });
           }, 100);
-
-
         }
       }, false);
+
+      function drawCircle(x, y, stepSize) {
+        var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("id", "circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r", "0");
+        circle.setAttribute("stroke-width", "1");
+
+        circle.setAttribute("fill", "none");
+        circle.setAttribute("direction", "expand");
+        circle.setAttribute("stepSize", stepSize);
+        circle.setAttribute("reverse", "false");
+        circle.setAttribute("lives", 25);
+
+        var color = "hsl(207,86%,41%)";
+        circle.setAttribute("stroke", color);
+
+        return circle;
+      }
+
+      setInterval(function () {
+        markCirclesForReverse(circles);
+
+        circles.forEach(function (circle) {
+
+          if (circle.attributes.reverse.value == "true") {
+            circle.setAttribute("lives", circle.attributes.lives.value - 1);
+            reverseCircle(circle);
+            circle.setAttribute("reverse", "false");
+          }
+
+          var r = 0;
+
+          if (circle.attributes.direction.value == "expand") {
+            r =
+              parseFloat(circle.attributes.r.value) +
+              parseFloat(circle.attributes.stepSize.value);
+          } else {
+            r =
+              parseFloat(circle.attributes.r.value) -
+              parseFloat(circle.attributes.stepSize.value);
+          }
+
+          if (r <= circle.attributes.stepSize.value) {
+            if (circle.attributes.lives.value <= 0) {
+              removeCircle(circle);
+            }
+            circle.setAttribute("direction", "expand");
+          }
+
+          if (r > 500) {
+            circle.setAttribute("direction", "contract");
+          }
+
+          if (circles.attributes.lives.value < -500){
+            removeCircle(circle);
+          }
+
+          circle.setAttribute("r", r);
+          var hue = (r * 2) % 360;
+          var color = "hsl(" + hue + ",86%,41%)";
+          circle.setAttribute("stroke", color);
+
+        });
+      }, 50);
+
+      function markCirclesForReverse(circles) {
+        for (var i = 0; i < circles.length; i++) {
+
+          if (circles[i].attributes.reverse.value == "true"){
+            continue;
+          }
+
+          for (var j = 0; j < circles.length; j++) {
+            if (circles[i].attributes.reverse.value == "true"){
+            continue;
+          }
+            if (circles[i] == circles[j]) {
+              continue;
+            }
+
+            var v = doCirclesTouch(circles[i], circles[j]);
+
+            if (v > 0) {
+              circles[j].setAttribute("reverse", "true");
+            }
+          }
+        }
+      }
 
       function doCirclesTouch(circle1, circle2) {
         if (circle1 == circle2) {
@@ -119,92 +209,17 @@
         return -1;
       }
 
-      function drawCircle(x, y, stepSize) {
-        var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("id", "circle");
-        circle.setAttribute("cx", x);
-        circle.setAttribute("cy", y);
-        circle.setAttribute("r", "0");
-        circle.setAttribute("stroke-width", "1");
-
-        circle.setAttribute("fill", "none");
-        circle.setAttribute("direction", "expand");
-        circle.setAttribute("stepSize", stepSize);
-        circle.setAttribute("reverse", "false");
-        circle.setAttribute("lives", 25);
-
-        var color = "hsl(207,86%,41%)";
-        circle.setAttribute("stroke", color);
-
-        return circle;
-      }
-
-      setInterval(function () {
-        markCirclesForReverse(circles);
-
-        circles.forEach(function (circle) {
-
-
-          if (circle.attributes.reverse.value == "true") {
-            circle.setAttribute("lives", circle.attributes.lives.value - 1);
-            if (circle.attributes.direction.value == "expand") {
+      function reverseCircle(circle){
+        if (circle.attributes.direction.value == "expand") {
               circle.setAttribute("direction", "contract");
             } else {
               circle.setAttribute("direction", "expand");
             }
-            circle.setAttribute("reverse", "false");
-          }
+      }
 
-          if (circle.attributes.r.value <= 0) {
-            circle.setAttribute("direction", "expand");
-          }
-
-          var r = 0;
-
-          if (circle.attributes.direction.value == "expand") {
-            r =
-              parseFloat(circle.attributes.r.value) +
-              parseFloat(circle.attributes.stepSize.value);
-          } else {
-            r =
-              parseFloat(circle.attributes.r.value) -
-              parseFloat(circle.attributes.stepSize.value);
-          }
-
-          if (r <= 0) {
-            if (circle.attributes.lives.value <= 0) {
-              circles.splice(circles.indexOf(circle), 1);
-              svgBubbles.removeChild(circle);
-            }
-            circle.setAttribute("direction", "expand");
-          }
-
-          if (r > 500) {
-            circle.setAttribute("direction", "contract");
-          }
-
-          circle.setAttribute("r", r);
-          var hue = (r * 2) % 360;
-          var color = "hsl(" + hue + ",86%,41%)";
-          circle.setAttribute("stroke", color);
-
-        });
-      }, 10);
-
-      function markCirclesForReverse(circles) {
-        for (var i = 0; i < circles.length; i++) {
-          for (var j = 0; j < circles.length; j++) {
-            if (circles[i] == circles[j]) {
-              continue;
-            }
-
-            var v = doCirclesTouch(circles[i], circles[j]);
-
-            if (v > 0) {
-              circles[j].setAttribute("reverse", "true");
-            }
-          }
-        }
+      function removeCircle(circle){
+        circles.splice(circles.indexOf(circle), 1);
+        svgBubbles.removeChild(circle);
       }
 
     }
