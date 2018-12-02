@@ -150,19 +150,15 @@
           circle.setAttribute("stroke", color);
 
         });
-      }, 50);
+      }, 30);
 
       function markCirclesForReverse(circles) {
         for (var i = 0; i < circles.length; i++) {
 
-          if (circles[i].attributes.reverse.value == "true"){
-            continue;
-          }
-
           for (var j = 0; j < circles.length; j++) {
-            if (circles[i].attributes.reverse.value == "true"){
-            continue;
-          }
+            if (circles[j].attributes.reverse.value == "true"){
+              continue;
+            }
             if (circles[i] == circles[j]) {
               continue;
             }
