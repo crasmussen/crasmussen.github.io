@@ -11,36 +11,79 @@
       height: 100%;
       width: 100%;
     }
+
+    svg {
+      z-index: 1;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    #diagnostics {
+      z-index: 10;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 800px;
+      color: rebeccapurple;
+    }
   </style>
 </head>
 
 <body>
-  <svg class="progress" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" id="bubbles"></svg>
+  <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" id="bubbles"></svg>
+
+  <div id="diagnostics">
+    <p>Version: 10</p>
+    <ul id="diagnosticsList"></ul>
+  </div>
   <script type="text/javascript">
     function autorun() {
-      var svgCircle = document.querySelector(".progress");
+      var svgBubbles = document.getElementById("bubbles");
+      var diagnosticsList = document.getElementById("diagnosticsList");
       var circles = [];
-
-      var pt = svgCircle.createSVGPoint();
+      var circleId = 0;
+      var pt = svgBubbles.createSVGPoint();
 
       // Get point in global SVG space
       function cursorPoint(evt) {
         pt.x = evt.clientX;
         pt.y = evt.clientY;
-        return pt.matrixTransform(svgCircle.getScreenCTM().inverse());
+        return pt.matrixTransform(svgBubbles.getScreenCTM().inverse());
       }
 
       document.getElementById("bubbles").addEventListener("click", function (event) {
         var loc = cursorPoint(event);
         var newCircle = drawCircle(loc.x, loc.y, 0.15);
-        svgCircle.appendChild(newCircle);
+        svgBubbles.appendChild(newCircle);
         circles.push(newCircle);
 
       }, false);
 
-      circles.forEach(function (circle) {
-        svgCircle.appendChild(circle);
-      });
+      document.addEventListener("keypress", function (event) {
+
+        var key = event.which || event.keyCode;
+        if (key === 100 || key === 68) {
+          setInterval(function () {
+            while (diagnosticsList.firstChild) {
+              diagnosticsList.removeChild(diagnosticsList.firstChild);
+            }
+
+            circles.forEach(function (circle) {
+              var diagnostics = "id: " + circles.indexOf(circle) + " radius: " + Math.round(circle.attributes
+                  .r.value * 10) / 10 +
+                " direction: " + circle.attributes.direction.value + " lives: " + circle.attributes.lives.value;
+
+              var newNumberListItem = document.createElement("li");
+              var numberListValue = document.createTextNode(diagnostics);
+              newNumberListItem.appendChild(numberListValue);
+              diagnosticsList.appendChild(newNumberListItem);
+            });
+          }, 100);
+
+
+        }
+      }, false);
 
       function doCirclesTouch(circle1, circle2) {
         if (circle1 == circle2) {
@@ -130,7 +173,7 @@
           if (r <= 0) {
             if (circle.attributes.lives.value <= 0) {
               circles.splice(circles.indexOf(circle), 1);
-              svgCircle.removeChild(circle);
+              svgBubbles.removeChild(circle);
             }
             circle.setAttribute("direction", "expand");
           }
